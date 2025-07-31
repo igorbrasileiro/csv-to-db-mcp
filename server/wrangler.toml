@@ -19,6 +19,12 @@ name = "DATABASES"
 type = "mcp"
 integration_id = "i:databases-management"
 
+
+[[deco.bindings]]
+name = "GMAIL"
+type = "mcp"
+integration_name = "@deco/google-gmail"
+
 [[migrations]]
 tag = "v1"
 new_classes = [ "Workflow" ]
