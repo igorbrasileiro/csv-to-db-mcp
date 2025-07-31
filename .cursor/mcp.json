@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "csv-to-db": {
+      "type": "http",
+      "url": "https://localhost-a99fafda.deco.host/mcp"
+    }
+  }
+}
