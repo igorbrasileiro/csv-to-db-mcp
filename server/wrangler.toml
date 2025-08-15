@@ -19,7 +19,6 @@ name = "DATABASES"
 type = "mcp"
 integration_id = "i:databases-management"
 
-
 [[deco.bindings]]
 name = "GMAIL"
 type = "mcp"

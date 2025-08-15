@@ -6,24 +6,13 @@ import {
   createWorkflow,
 } from "@deco/workers-runtime/mastra";
 import { z } from "zod";
-import { type Env as DecoEnv, Policies, StateSchema } from "./deco.gen.ts";
+import { type Env as DecoEnv, Scopes, StateSchema } from "./deco.gen.ts";
 
 interface Env extends DecoEnv {
   ASSETS: {
     fetch: (request: Request) => Promise<Response>;
   };
 }
-
-// const createMyTool = (_env: Env) =>
-//   createTool({
-//     id: "MY_TOOL",
-//     description: "Say hello",
-//     inputSchema: z.object({ name: z.string() }),
-//     outputSchema: z.object({ message: z.string() }),
-//     execute: async ({ context }) => ({
-//       message: `Hello, ${context.name}!`,
-//     }),
-//   });
 
 const createCsvToDbTool = (env: Env) =>
   createTool({
@@ -157,11 +146,8 @@ const createCsvToDbTool = (env: Env) =>
               params: values,
             });
 
-          if (insertResult.result[0]?.success) {
-            rowsInserted++;
-          } else {
-            throw new Error(
-              `Row insert failed: ${JSON.stringify(insertResult.result[0])}`,
+          if (insertResult.result[0]?.success) {rowsInserted++;} else {  throw new Error(
+                `Row insert failed: ${JSON.stringify(insertResult.result[0])}`,
             );
           }
         }
@@ -185,38 +171,26 @@ const createCsvToDbTool = (env: Env) =>
     },
   });
 
-// const createMyWorkflow = (env: Env) => {
-//   const step = createStepFromTool(createMyTool(env));
-
-//   return createWorkflow({
-//     id: "MY_WORKFLOW",
-//     inputSchema: z.object({ name: z.string() }),
-//     outputSchema: z.object({ message: z.string() }),
-//   })
-//     .then(step)
-//     .commit();
-// };
-
-const fallbackToView = (viewPath: string = "/") => (req: Request, env: Env) => {
-  const LOCAL_URL = "http://localhost:4000";
-  const url = new URL(req.url);
-  const useDevServer = (req.headers.get("origin") || req.headers.get("host"))
-    ?.includes("localhost");
-
-  const request = new Request(
-    useDevServer
-      ? new URL(`${url.pathname}${url.search}`, LOCAL_URL)
-      : new URL(viewPath, req.url),
-    req,
-  );
-
-  return useDevServer ? fetch(request) : env.ASSETS.fetch(request);
-};
+  const fallbackToView = (viewPath: string = "/") => (req: Request, env: Env) => {
+    const LOCAL_URL = "http://localhost:4000";
+    const url = new URL(req.url);
+    const useDevServer = (req.headers.get("origin") || req.headers.get("host"))
+      ?.includes("localhost");
+  
+    const request = new Request(
+      useDevServer
+        ? new URL(`${url.pathname}${url.search}`, LOCAL_URL)
+        : new URL(viewPath, req.url),
+      req,
+    );
+  
+    return useDevServer ? fetch(request) : env.ASSETS.fetch(request);
+  };
 
 const { Workflow, ...runtime } = withRuntime<Env, typeof StateSchema>({
   // workflows: [createMyWorkflow],
   tools: [createCsvToDbTool],
-  oauth: { state: StateSchema, scopes: [Policies.GMAIL.GetEmails] },
+  oauth: { state: StateSchema, scopes: [Scopes.GMAIL.GetEmails] },
   fetch: fallbackToView("/"),
 });
 
